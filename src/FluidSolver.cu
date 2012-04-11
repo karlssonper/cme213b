@@ -73,7 +73,8 @@ void advectLevelset(const float dt,
 	
 }
 
-__globall__ reinitLevelset(const float * d_levelsetIn,
+__global__ 
+void reinitLevelset(const float * d_levelsetIn,
 		                   float * d_levelsetOut)
 {
 	
@@ -107,7 +108,7 @@ void updateVelocities(const float * d_levelset,
 __global__
 void buildLevelSetSphere(const float r,
 						 const float3 center,
-						 float * d_levelsetIn)
+						 float * d_levelset)
 {
 	
 }
@@ -120,7 +121,7 @@ FluidSolver::FluidSolver(uint dim_x, uint dim_y, uint dim_z)
 	init();
 }
 
-FluidSolver::init()
+void FluidSolver::init()
 {
 	const unsigned int numVoxels = dim_[DIM_X] * dim_[DIM_Y] * dim_[DIM_Z]; 
 	vel_[DIM_X].resize(numVoxels);
@@ -134,7 +135,7 @@ FluidSolver::init()
 	curVolume_ = initVolume_;
 }
 
-FluidSolver::solve(const float dt)
+void FluidSolver::solve(const float dt)
 {
 	float elapsed = 0.0f;
 	float timestep;
@@ -142,11 +143,12 @@ FluidSolver::solve(const float dt)
 	//Update the fluid
 	while(elapsed < dt) {
 		//1. Calculate the largest timestep we can take with CFL condition.
-		velocityMagnitude<<<blocks_, threads_>>>(
-											     levelset_.inPtr(),
-											     vel_[DIM_X].inPtr(),
-											     vel_[DIM_Y].inPtr(),
-											     vel_[DIM_Z].inPtr());
+		velocityMagnitude<<<blocks_, threads_>>>(	
+										thrust::raw_pointer_cast(&velMag_[0]),
+										levelset_.inPtr(),
+										vel_[DIM_X].inPtr(),
+										vel_[DIM_Y].inPtr(),
+										vel_[DIM_Z].inPtr());
 		//Do thrust stuff to reduce 2nd part.
 		//timestep = TODO
 		
@@ -167,25 +169,25 @@ FluidSolver::solve(const float dt)
 		swapVelocities();
 		
 		//3. Add external forces to the velocity field.
-		addExternalForces<<blocks_, threads_>>> (externalForce_,
-											     levelset_.inPtr(),
-												 vel_[DIM_X].inPtr(),
-											 	 vel_[DIM_Y].inPtr(),
-												 vel_[DIM_Z].inPtr(),
-												 vel_[DIM_X].outPtr(),
-												 vel_[DIM_Y].outPtr(),
-												 vel_[DIM_Z].outPtr());
+		addExternalForces<<<blocks_, threads_>>> (externalForce_,
+											      levelset_.inPtr(),
+												  vel_[DIM_X].inPtr(),
+											 	  vel_[DIM_Y].inPtr(),
+												  vel_[DIM_Z].inPtr(),
+												  vel_[DIM_X].outPtr(),
+												  vel_[DIM_Y].outPtr(),
+												  vel_[DIM_Z].outPtr());
 		swapVelocities();
 		
 		//4. Advect the velocity field in itself
-		advectVelocities<<blocks_, threads_>>> (timestep,
-											    levelset_.inPtr(),
-												vel_[DIM_X].inPtr(),
-											 	vel_[DIM_Y].inPtr(),
-							                    vel_[DIM_Z].inPtr(),
-												vel_[DIM_X].outPtr(),
-												vel_[DIM_Y].outPtr(),
-												vel_[DIM_Z].outPtr());
+		advectVelocities<<<blocks_, threads_>>> (timestep,
+											     levelset_.inPtr(),
+												 vel_[DIM_X].inPtr(),
+											 	 vel_[DIM_Y].inPtr(),
+							                     vel_[DIM_Z].inPtr(),
+												 vel_[DIM_X].outPtr(),
+												 vel_[DIM_Y].outPtr(),
+												 vel_[DIM_Z].outPtr());
 		swapVelocities();
 		
 		//5. Advect the surface tracking Level Set.
@@ -206,7 +208,7 @@ FluidSolver::solve(const float dt)
 		//Use thrust and reduce
 		
 		//8. Solve pressure
-		solvePressure<<<blocks_,threads_>>>(initVolume_ - curVolume,
+		solvePressure<<<blocks_,threads_>>>(initVolume_ - curVolume_,
 				                            levelset_.inPtr(),
 				                            vel_[DIM_X].inPtr(),
 											vel_[DIM_Y].inPtr(),
@@ -228,34 +230,34 @@ FluidSolver::solve(const float dt)
 	}
 }
 
-FluidSolver::render()
+void FluidSolver::render()
 {
 	
 }
 
-FluidSolver::marchingCubes()
+void FluidSolver::marchingCubes()
 {
 	
 }
 
-FluidSolver::swapVelocities()
+void FluidSolver::swapVelocities()
 {
 	for (int i = 0; i < NUM_DIMS; i++) {
 		vel_[i].swap();
 	}
 }
 
-FluidSolver::dimIs(FluidSolver::Dimension d, uint value)
+void FluidSolver::dimIs(FluidSolver::Dimension d, uint value)
 {
 	//Is not power of two?
-	if (n == 1 || (n & (n-1)) == 0) {
+	if (value == 1 || (value & (value-1)) == 0) {
 		std::cerr << "Dimension is not power of two." << std::endl;
 		exit(1);
 	}
 	dim_[d] = value;
 }
 
-FluidSolver::buildLevelSet()
+void FluidSolver::buildLevelSet()
 {
 	//Build Sphere or whatever to levelset_
 }

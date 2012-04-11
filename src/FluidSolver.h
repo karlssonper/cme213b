@@ -24,6 +24,7 @@ protected:
 	DeviceArray<float> vel_[NUM_DIMS];
 	DeviceArray<float> pressure_;
 	DeviceArray<float> levelset_;
+	thrust::device_vector<float> velMag_;
 	unsigned int initVolume_;
 	unsigned int curVolume_;
 	float3 externalForce_;
