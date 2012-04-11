@@ -1,0 +1,17 @@
+*.swp
+*.o
+*.backup
+*.bgeo
+*~
+tags
+build*
+Debug
+buddies
+models
+lib
+sound
+textures
+.cproject
+.project
+.settings
+bin
