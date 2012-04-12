@@ -24,15 +24,17 @@ protected:
 	DeviceArray<float> vel_[NUM_DIMS];
 	DeviceArray<float> pressure_;
 	DeviceArray<float> levelset_;
+	thrust::device_vector<float2> surfacePoints_;
 	thrust::device_vector<float> velMag_;
 	unsigned int initVolume_;
 	unsigned int curVolume_;
 	float3 externalForce_;
+	float sphereRadius_;
+	float3 sphereCenter_;
 	dim3 blocks_;
 	dim3 threads_;
 	void dimIs(Dimension d, unsigned int value);
 	void swapVelocities();
-	void buildLevelSet();
 	unsigned int fluidVolume() const;
 private:
 	FluidSolver();

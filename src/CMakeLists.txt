@@ -1,5 +1,5 @@
 # QT variables
-SET(app_SOURCES main mainwindow)
+SET(app_SOURCES main mainwindow FluidSolver.cu)
 SET(app_HEADERS mainwindow.h)
 
 QT4_WRAP_CPP(app_HEADERS_MOC ${app_HEADERS})
