@@ -16,7 +16,7 @@ signals:
 public slots:
 
 protected:
-	void initializeGL();
+    void initializeGL();
     void paintGL();
     FluidSolver * fluidSolver_;
     GLuint width_;
