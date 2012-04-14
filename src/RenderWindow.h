@@ -9,13 +9,14 @@ class RenderWindow : public QGLWidget
 {
     Q_OBJECT
 public:
-    explicit RenderWindow(QWidget *parent = 0, FluidSolver *solver = 0);
+    explicit RenderWindow(QWidget *parent = 0);
     
 signals:
     
 public slots:
 
 protected:
+    void resizeGL(int w, int h);
     void initializeGL();
     void paintGL();
     FluidSolver * fluidSolver_;

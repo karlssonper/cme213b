@@ -1,5 +1,5 @@
 __global__
-void buildLevelSetSphere(const float r,
+void buildLevelsetSphere(const float r,
                          const float2 center,
                          const float dx,
                          float * d_levelset)
@@ -13,12 +13,12 @@ void buildLevelSetSphere(const float r,
     d_levelset[idx] = sqrt(x*x+y*y) - r;
 }
 
-void buildLevelSetSphere(dim3 blocks,
+void buildLevelsetSphere(dim3 blocks,
                          dim3 threads,
                          const float r,
                          const float2 center,
                          const float dx,
                          float * d_levelset)
 {
-    buildLevelSetSphere<<<blocks,threads>>>(r, center, dx, d_levelset);
+    buildLevelsetSphere<<<blocks,threads>>>(r, center, dx, d_levelset);
 }

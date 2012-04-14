@@ -7,7 +7,6 @@ namespace Ui {
 class MainWindow;
 }
 
-class FluidSolver;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -18,7 +17,6 @@ public:
 
 protected:
     RenderWindow *renderWindow_;
-    FluidSolver * fluidSolver_;
 private:
     Ui::MainWindow *ui;
 };

@@ -10,55 +10,27 @@
 
 #include <thrust/device_vector.h>
 
-template <typename T>
 class DeviceArray
 {
 private:
 	enum State{FIRST = 0, SECOND = 1};
 	State in_;
 	State out_;
-	thrust::device_vector<T> vec_[2];
+	thrust::device_vector<float> vec_[2];
 public:
-	DeviceArray() : in_(FIRST), out_(SECOND)
-	{
-		resize(0);
-	};
+	DeviceArray();
 
-	DeviceArray(unsigned int size) : in_(FIRST), out_(SECOND)
-	{
-		resize(size);
-	};
+	DeviceArray(unsigned int size);
 
-	const T * inPtr() const
-    {
-		return thrust::raw_pointer_cast(&vec_[in_][0]);
-	};
+	const float * inPtr() const;
 
-	const thrust::device_vector<T> & inVec() const
-	{
-		return vec_[in_];
-	};
+	const thrust::device_vector<float> & inVec() const;
 
-	T * outPtr()
-    {
-	    std::cerr << "lol" << std::endl;
-		thrust::raw_pointer_cast(&vec_[out_][0]);
-		std::cerr << "lewis carlos" << std::endl;
-		return thrust::raw_pointer_cast(&vec_[out_][0]);
-	};
+	float * outPtr();
 
-	void swap()
-	{
-		State temp = in_;
-		in_ = out_;
-		out_ = temp;
-	};
+	void swap();
 
-	void resize(unsigned int size)
-	{
-		vec_[FIRST].resize(size);
-		vec_[SECOND].resize(size);
-	};
+	void resize(unsigned int size);
 };
 
 #endif /* DEVICEARRAY_H_ */

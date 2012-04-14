@@ -10,7 +10,9 @@
 
 #define MASK_SOLID 0
 #define MASK_FLUID 1
-
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
 #include "DeviceArray.h"
 
 class FluidSolver
@@ -19,19 +21,19 @@ public:
     FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dx);
     void init();
     void solve (const float dt);
-    void render();
+    void render(uchar4 * d_pbo);
     void marchingCubes();
 protected:
     enum Dimension{ DIM_X = 0, DIM_Y = 1, NUM_DIMS = 2 };
     unsigned int dim_[NUM_DIMS];
     float dx_;
-    DeviceArray<float> vel_[NUM_DIMS];
-    DeviceArray<float> pressure_;
-    DeviceArray<float> levelset_;
+    DeviceArray vel_[NUM_DIMS];
+    DeviceArray pressure_;
+    DeviceArray levelset_;
 
-    thrust::device_vector<unsigned char> mask_;
-    thrust::device_vector<float> velMag_;
-    thrust::device_vector<float2> surfacePoints_;
+    //thrust::device_vector<unsigned char> mask_;
+    //thrust::device_vector<float> velMag_;
+    //thrust::device_vector<float2> surfacePoints_;
     unsigned int initVolume_;
     unsigned int curVolume_;
     float2 externalForce_;

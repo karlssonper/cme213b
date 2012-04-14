@@ -8,44 +8,89 @@
 #ifndef FLUIDKERNELS_H_
 #define FLUIDKERNELS_H_
 
-#include "kernels/AdvectLevelset.cu"
-#include "kernels/VelocityMagnitude.cu"
-#include "kernels/ExtrapolateVelocities.cu"
-#include "kernels/AddExternalForces.cu"
-#include "kernels/AdvectVelocities.cu"
-extern "C" advectLevelset();
-
-extern "C" void velocityMagnitude(dim3 blocks, dim3 threads, float * blockMags,
-                                  const float * d_levelset,
-                                  const float * d_velIn_x,
-                                  const float * d_velIn_y);
-
-extern "C" void extrapolateVelocities(dim3 blocks, dim3 threads,
-                                      const float * d_levelset,
-                                      const float2 * d_surfacePoints,
-                                      const float * d_velIn_x,
-                                      const float * d_velIn_y,
-                                      float * d_velOut_x,
-                                      float * d_velOut_y);
-
-
-extern "C" void addExternalForces(dim3 blocks, dim3 threads, const float dt,
-                                  const float2 force,
-                                  const float * d_levelset,
-                                  const float * d_velIn_x,
-                                  const float * d_velIn_y,
-                                  float * d_velOut_x,
-                                  float * d_velOut_y);
-
-extern "C" void advectVelocities(dim3 blocks, dim3 threads,const float dt,
-                                 const float * d_levelset,
-                                 const float * d_velIn_x,
-                                 const float * d_velIn_y,
-                                 float * d_velOut_x,
-                                 float * d_velOut_y)
-
-
 dim3 blocks;
 dim3 threads;
+
+void addExternalForces(dim3 blocks,
+                       dim3 threads,
+                       const float dt,
+                       const float2 force,
+                       const float * d_levelset,
+                       const float * d_velIn_x,
+                       const float * d_velIn_y,
+                       float * d_velOut_x,
+                       float * d_velOut_y);
+
+void advectVelocities(dim3 blocks,
+                      dim3 threads,
+                      const float dt,
+                      const float * d_levelset,
+                      const float * d_velIn_x,
+                      const float * d_velIn_y,
+                      float * d_velOut_x,
+                      float * d_velOut_y);
+
+void advectLevelset(dim3 blocks,
+                    dim3 threads,
+                    const float dt,
+                    const float inv_dx,
+                    const unsigned char * d_mask,
+                    const float * d_levelsetIn,
+                    float * d_levelsetOut,
+                    const float * d_velIn_x,
+                    const float * d_velIn_y);
+
+void buildLevelsetSphere(dim3 blocks,
+                         dim3 threads,
+                         const float r,
+                         const float2 center,
+                         const float dx,
+                         float * d_levelset);
+
+void extrapolateVelocities(dim3 blocks,
+                           dim3 threads,
+                           const float * d_levelset,
+                           const float2 * d_surfacePoints,
+                           const float * d_velIn_x,
+                           const float * d_velIn_y,
+                           float * d_velOut_x,
+                           float * d_velOut_y);
+
+void reinitLevelset(dim3 blocks,
+                    dim3 threads,
+                    const float * d_levelsetIn,
+                    float * d_levelsetOut,
+                    float2 * d_surfacePoints);
+
+void solvePressure(dim3 blocks,
+                   dim3 threads,
+                   const float volumeLoss,
+                   const float * d_levelset,
+                   const float * d_velIn_x,
+                   const float * d_velIn_y,
+                   const float * d_pressureIn,
+                   float * d_pressureOut);
+
+void updateVelocities(dim3 blocks,
+                      dim3 threads,
+                      const float * d_levelset,
+                      const float * d_velIn_x,
+                      const float * d_velIn_y,
+                      float * d_velOut_x,
+                      float * d_velOut_y,
+                      const float * d_pressure);
+
+void velocityMagnitude(dim3 blocks,
+                       dim3 threads,
+                       float * blockMags,
+                       const float * d_levelset,
+                       const float * d_velIn_x,
+                       const float * d_velIn_y);
+
+void writePBO(dim3 blocks,
+              dim3 threads,
+              uchar4 * d_pbo,
+              const float * d_levelset);
+
 
 #endif /* FLUIDKERNELS_H_ */

@@ -1,4 +1,4 @@
-template<int T_THREADS>
+//template<int T_THREADS>
 __global__
 void advectLevelset(const float dt,
                     const float inv_dx,
@@ -8,6 +8,8 @@ void advectLevelset(const float dt,
                     const float * d_velIn_x,
                     const float * d_velIn_y)
 {
+    //todo remove
+    const int T_THREADS = 16;
     const int i = threadIdx.x + blockDim.x * blockIdx.x;
     const int j = threadIdx.y + blockDim.y * blockIdx.y;
     const int g_idx = i + j * blockDim.x * gridDim.x;
@@ -91,7 +93,21 @@ void advectLevelset(const float dt,
     d_levelsetOut[g_idx] = phi - dt * (dphidx * vel_x + dphidy * vel_y);
 }
 
-void advectLevelset()
+void advectLevelset(dim3 blocks,
+                    dim3 threads,
+                    const float dt,
+                    const float inv_dx,
+                    const unsigned char * d_mask,
+                    const float * d_levelsetIn,
+                    float * d_levelsetOut,
+                    const float * d_velIn_x,
+                    const float * d_velIn_y)
 {
-    
+    advectLevelset<<<blocks,threads>>>(dt, 
+                                       inv_dx, 
+                                       d_mask, 
+                                       d_levelsetIn, 
+                                       d_levelsetOut, 
+                                       d_velIn_x, 
+                                       d_velIn_y);
 }
