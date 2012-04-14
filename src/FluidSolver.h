@@ -16,7 +16,7 @@
 class FluidSolver
 {
 public:
-	FluidSolver(unsigned int dim_x, unsigned int dim_y);
+	FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dx);
 	void init();
 	void solve (const float dt);
 	void render();
@@ -43,6 +43,9 @@ protected:
 	void swapVelocities();
 	void buildLevelSet();
 	unsigned int fluidVolume() const;
+
+	template<int T_THREADS>
+	void solve(const float dt);
 private:
 	FluidSolver();
 	FluidSolver(const FluidSolver &);

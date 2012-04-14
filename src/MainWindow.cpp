@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->gravitySlider->setMaximum(10);
     ui->gravityNumber->display(0);
 
-    fluidSolver_ = new FluidSolver(256,256);
+    fluidSolver_ = new FluidSolver(256,256, 16, 1.0f/256.0f);
     renderWindow_ = new RenderWindow(this,fluidSolver_);
     ui->scrollArea->setWidget(renderWindow_);
 
