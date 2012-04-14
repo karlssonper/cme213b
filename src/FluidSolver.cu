@@ -10,58 +10,9 @@ T bilerp(const T v00,
     return v00;
 }
 
-__global__
-void velocityMagnitude(float * blockMags,
-                       const float * d_levelset,
-                       const float * d_velIn_x,
-                       const float * d_velIn_y)
-{
 
-}
 
-__global__
-void extrapolateVelocities(const float * d_levelset,
-                           const float2 * d_surfacePoints,
-                           const float * d_velIn_x,
-                           const float * d_velIn_y,
-                           float * d_velOut_x,
-                           float * d_velOut_y)
-{
 
-}
-
-__global__
-void addExternalForces(const float dt,
-                       const float2 force,
-                       const float * d_levelset,
-                       const float * d_velIn_x,
-                       const float * d_velIn_y,
-                       float * d_velOut_x,
-                       float * d_velOut_y)
-{
-    // Get Index
-    // Notes on indexing:
-    int index  = blockDim.x* (blockIdx.x + blockIdx.y*gridDim.x) +
-            threadIdx.y*blockDim.x + threadIdx.x;
-
-    // Only compute external forces for fluid voxels
- //   if (d_levelset(index))
-    {
-        d_velOut_x[index] = d_velIn_x[index] + dt*force.x;
-        d_velOut_y[index] = d_velIn_y[index] + dt*force.y;
-    }
-}
-
-__global__
-void advectVelocities(const float dt,
-                      const float * d_levelset,
-                      const float * d_velIn_x,
-                      const float * d_velIn_y,
-                      float * d_velOut_x,
-                      float * d_velOut_y)
-{
-
-}
 
 __global__
 void reinitLevelset(const float * d_levelsetIn,
