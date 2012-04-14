@@ -78,42 +78,42 @@ void RenderWindow::paintGL()
 
 void RenderWindow::initPBO()
 {
-       if (pbo_) {
-            // unregister this buffer object from CUDA C
-            cudaGraphicsUnregisterResource(cuda_pbo_resource_);
+   if (pbo_) {
+        // unregister this buffer object from CUDA C
+        cudaGraphicsUnregisterResource(cuda_pbo_resource_);
 
-            // delete old buffer
-            glDeleteBuffersARB(1, &pbo_);
-            glDeleteTextures(1, &tex_);
-        }
+        // delete old buffer
+        glDeleteBuffersARB(1, &pbo_);
+        glDeleteTextures(1, &tex_);
+    }
 
-        // create pixel buffer object for display
-        glGenBuffersARB(1, &pbo_);
-        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pbo_);
-        glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,
-                        width_*height_*sizeof(GLubyte)*4,
-                        0,
-                        GL_STREAM_DRAW_ARB);
-        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+    // create pixel buffer object for display
+    glGenBuffersARB(1, &pbo_);
+    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pbo_);
+    glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB,
+                    width_*height_*sizeof(GLubyte)*4,
+                    0,
+                    GL_STREAM_DRAW_ARB);
+    glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
-        // register this buffer object with CUDA
-        cudaGraphicsGLRegisterBuffer(&cuda_pbo_resource_,
-                                     pbo_,
-                                     cudaGraphicsMapFlagsWriteDiscard);
+    // register this buffer object with CUDA
+    cudaGraphicsGLRegisterBuffer(&cuda_pbo_resource_,
+                                 pbo_,
+                                 cudaGraphicsMapFlagsWriteDiscard);
 
-        // create texture for display
-        glGenTextures(1, &tex_);
-        glBindTexture(GL_TEXTURE_2D, tex_);
-        glTexImage2D(GL_TEXTURE_2D,
-                     0,
-                     GL_RGBA8,
-                     width_,
-                     height_,
-                     0,
-                     GL_RGBA,
-                     GL_UNSIGNED_BYTE,
-                     NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glBindTexture(GL_TEXTURE_2D, 0);
+    // create texture for display
+    glGenTextures(1, &tex_);
+    glBindTexture(GL_TEXTURE_2D, tex_);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_RGBA8,
+                 width_,
+                 height_,
+                 0,
+                 GL_RGBA,
+                 GL_UNSIGNED_BYTE,
+                 NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
