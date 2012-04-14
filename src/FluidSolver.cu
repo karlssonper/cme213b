@@ -14,69 +14,6 @@ T bilerp(const T v00,
 
 
 
-__global__
-void reinitLevelset(const float * d_levelsetIn,
-                    float * d_levelsetOut,
-                    float2 * surfacePoints)
-{
-
-}
-
-__global__
-void solvePressure(const float volumeLoss,
-                   const float * d_levelset,
-                   const float * d_velIn_x,
-                   const float * d_velIn_y,
-                   const float * d_pressureIn,
-                   float * d_pressureOut)
-{
-
-}
-
-__global__
-void updateVelocities(const float * d_levelset,
-                      const float * d_velIn_x,
-                       const float * d_velIn_y,
-                      float * d_velOut_x,
-                      float * d_velOut_y,
-                      const float * d_pressure)
-{
-
-}
-
-__global__
-void buildLevelSetSphere(const float r,
-                         const float2 center,
-                         const float dx,
-                         float * d_levelset)
-{
-    const int i = threadIdx.x + blockDim.x * blockIdx.x;
-    const int j = threadIdx.y + blockDim.y * blockIdx.y;
-    const int idx = i + j * blockDim.x * gridDim.x;
-
-    const float x = dx * i - center.x;
-    const float y = dx * j - center.y;
-    d_levelset[idx] = sqrt(x*x+y*y) - r;
-}
-
-__global__
-void raycast(const float * d_levelset)
-{
-}
-
-__global__
-void writePBO(uchar4 * d_pbo, const float d_levelset)
-{
-    const int i = threadIdx.x + blockDim.x * blockIdx.x;
-    const int j = threadIdx.y + blockDim.y * blockIdx.y;
-    const int idx = i + j * blockDim.x * gridDim.x;
-    
-    d_pbo[idx].x = 255;
-    d_pbo[idx].y = 0;
-    d_pbo[idx].z = 0;
-    d_pbo[idx].w = 255;
-}
-
 FluidSolver::FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dx) 
         : dx_(dx)
 {
