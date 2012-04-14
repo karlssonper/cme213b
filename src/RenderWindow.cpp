@@ -29,9 +29,8 @@ void RenderWindow::paintGL()
     fluidSolver_->solve(dt);
 
     // map PBO to get CUDA device pointer
-    uint *d_output;
-    // map PBO to get CUDA device pointer
     cudaGraphicsMapResources(1, &cuda_pbo_resource_, 0);
+    uint *d_output;
     size_t num_bytes;
     cudaGraphicsResourceGetMappedPointer((void **)&d_output,
                                          &num_bytes,
