@@ -2,26 +2,22 @@
 
 template <class T>
 __device__ 
-T trilerp(const T v000,
-		  const T v100,
-		  const T v010,
-		  const T v110,
-		  const T v001,
-		  const T v101,
-		  const T v011,
-		  const T v111)
+T bilerp(const T v00,
+		 const T v10,
+		 const T v01,
+		 const T v11)
 {
 	return 0.0f;
 }
 
 __device__
-unsigned int world2Idx()
+unsigned int worldToIdx2D()
 {
 	
 }
 
 __device__
-float3 idx2World()
+float3 idx2DToWorld()
 {
 	
 }
@@ -30,8 +26,7 @@ __global__
 void velocityMagnitude(float * blockMags,
 					   const float * d_levelset,
 		               const float * d_velIn_x,
-		               const float * d_velIn_y,
-		               const float * d_velIn_z)
+		               const float * d_velIn_y)
 {
 	
 }
@@ -41,24 +36,20 @@ void extrapolateVelocities(const float * d_levelset,
 		                   const float2 * d_surfacePoints,
 						   const float * d_velIn_x,
 						   const float * d_velIn_y,
-						   const float * d_velIn_z,
 						   float * d_velOut_x,
-						   float * d_velOut_y,
-						   float * d_velOut_z)
+						   float * d_velOut_y)
 {
 	
 }
 
 __global__
 void addExternalForces(const float dt,
-		               const float3 force,
+		               const float2 force,
 		               const float * d_levelset,
 					   const float * d_velIn_x,
 				       const float * d_velIn_y,
-				       const float * d_velIn_z,
 				       float * d_velOut_x,
-					   float * d_velOut_y,
-					   float * d_velOut_z)
+					   float * d_velOut_y)
 {
 	
 }
@@ -68,10 +59,8 @@ void advectVelocities(const float dt,
 					  const float * d_levelset,
 					  const float * d_velIn_x,
 					  const float * d_velIn_y,
-					  const float * d_velIn_z,
 					  float * d_velOut_x,
-					  float * d_velOut_y,
-					  float * d_velOut_z)
+					  float * d_velOut_y)
 {
 	
 }
@@ -81,8 +70,7 @@ void advectLevelset(const float dt,
 					const float * d_levelsetIn,
 					float * d_levelsetOut,
 					const float * d_velIn_x,
-				    const float * d_velIn_y,
-					const float * d_velIn_z)
+				    const float * d_velIn_y)
 {
 	
 }
@@ -100,7 +88,6 @@ void solvePressure(const float volumeLoss,
 				   const float * d_levelset,
 				   const float * d_velIn_x,
 				   const float * d_velIn_y,
-				   const float * d_velIn_z,
 				   const float * d_pressureIn,
 				   float * d_pressureOut)
 {
@@ -111,10 +98,8 @@ __global__
 void updateVelocities(const float * d_levelset, 
 					  const float * d_velIn_x,
 			 		  const float * d_velIn_y,
-					  const float * d_velIn_z,
 					  float * d_velOut_x,
 					  float * d_velOut_y,
-					  float * d_velOut_z,
 					  const float * d_pressure)
 {
 	
@@ -122,10 +107,15 @@ void updateVelocities(const float * d_levelset,
 
 __global__
 void buildLevelSetSphere(const float r,
-						 const float3 center,
+						 const float2 center,
 						 float * d_levelset)
 {
+	//Get idx;
+	int i,j,k;
+	float phi;
 	
+	
+	//d_levelset[idx1D] = phi;
 }
 
 __global__
@@ -134,20 +124,20 @@ void raycast(const float * d_levelset)
 	
 }
 
-FluidSolver::FluidSolver(uint dim_x, uint dim_y, uint dim_z)
+FluidSolver::FluidSolver(uint dim_x, uint dim_y)
 {
 	dimIs(DIM_X, dim_x);
 	dimIs(DIM_Y, dim_y);
-	dimIs(DIM_Z, dim_z);
 	init();
 }
 
 void FluidSolver::init()
 {
-	const unsigned int numVoxels = dim_[DIM_X] * dim_[DIM_Y] * dim_[DIM_Z]; 
+	std::cout << "FluidSolver: Initiating a new domain, " <<  
+	   dim_[DIM_X] << " x " << dim_[DIM_Y] << std::endl;
+	const unsigned int numVoxels = dim_[DIM_X] * dim_[DIM_Y]; 
 	vel_[DIM_X].resize(numVoxels);
 	vel_[DIM_Y].resize(numVoxels);
-	vel_[DIM_Z].resize(numVoxels);
 	pressure_.resize(numVoxels);
 	levelset_.resize(numVoxels);
 	surfacePoints_.resize(numVoxels);
@@ -156,6 +146,14 @@ void FluidSolver::init()
 	//velMag_.resize(TODO);
 	
 	//Build Sphere or whatever to levelset_
+	//Center in the grids midpoint
+	sphereCenter_ = make_float2(0.5 * dx_ * dim_[DIM_X],
+								0.5 * dx_ * dim_[DIM_Y]);
+	
+	//TODO, get value from gui
+	sphereRadius_ = 0.25 * dx_ * dim_[DIM_X];
+	
+	std::cout << "FluidSolver: Building level set sphere..." << std::endl;
 	buildLevelSetSphere<<<blocks_, threads_>>>(sphereRadius_, 
 											   sphereCenter_,
 											   levelset_.outPtr());
@@ -175,8 +173,7 @@ void FluidSolver::solve(const float dt)
 										thrust::raw_pointer_cast(&velMag_[0]),
 										levelset_.inPtr(),
 										vel_[DIM_X].inPtr(),
-										vel_[DIM_Y].inPtr(),
-										vel_[DIM_Z].inPtr());
+										vel_[DIM_Y].inPtr());
 		//Do thrust stuff to reduce 2nd part.
 		timestep = *thrust::max_element(velMag_.begin(), velMag_.end());
 		
@@ -191,11 +188,9 @@ void FluidSolver::solve(const float dt)
 		extrapolateVelocities<<<blocks_,threads_>>>(levelset_.inPtr(),
 													surfacePoints,
 													vel_[DIM_X].inPtr(),
-													vel_[DIM_Y].inPtr(),
-													vel_[DIM_Z].inPtr(),			
+													vel_[DIM_Y].inPtr(),			
 													vel_[DIM_X].outPtr(),
-													vel_[DIM_Y].outPtr(),
-													vel_[DIM_Z].outPtr());
+													vel_[DIM_Y].outPtr());
 		swapVelocities();
 		
 		//3. Add external forces to the velocity field.
@@ -204,10 +199,8 @@ void FluidSolver::solve(const float dt)
 											      levelset_.inPtr(),
 												  vel_[DIM_X].inPtr(),
 											 	  vel_[DIM_Y].inPtr(),
-												  vel_[DIM_Z].inPtr(),
 												  vel_[DIM_X].outPtr(),
-												  vel_[DIM_Y].outPtr(),
-												  vel_[DIM_Z].outPtr());
+												  vel_[DIM_Y].outPtr());
 		swapVelocities();
 		
 		//4. Advect the velocity field in itself
@@ -215,10 +208,8 @@ void FluidSolver::solve(const float dt)
 											     levelset_.inPtr(),
 												 vel_[DIM_X].inPtr(),
 											 	 vel_[DIM_Y].inPtr(),
-							                     vel_[DIM_Z].inPtr(),
 												 vel_[DIM_X].outPtr(),
-												 vel_[DIM_Y].outPtr(),
-												 vel_[DIM_Z].outPtr());
+												 vel_[DIM_Y].outPtr());
 		swapVelocities();
 		
 		//5. Advect the surface tracking Level Set.
@@ -226,8 +217,7 @@ void FluidSolver::solve(const float dt)
 				                             levelset_.inPtr(),
 				                             levelset_.outPtr(),
 				                             vel_[DIM_X].inPtr(),
-											 vel_[DIM_Y].inPtr(),
-											 vel_[DIM_Z].inPtr());
+											 vel_[DIM_Y].inPtr());
 		levelset_.swap();
 		
 		//6. Reinitialize the Level Set so it is numerically stable.
@@ -244,7 +234,6 @@ void FluidSolver::solve(const float dt)
 				                            levelset_.inPtr(),
 				                            vel_[DIM_X].inPtr(),
 											vel_[DIM_Y].inPtr(),
-											vel_[DIM_Z].inPtr(),
 											pressure_.inPtr(),
 											pressure_.outPtr());
 		pressure_.swap();
@@ -253,10 +242,8 @@ void FluidSolver::solve(const float dt)
 		updateVelocities<<<blocks_, threads_>>> (levelset_.inPtr(),
 												 vel_[DIM_X].inPtr(),
 												 vel_[DIM_Y].inPtr(),
-												 vel_[DIM_Z].inPtr(),
 												 vel_[DIM_X].outPtr(),
 												 vel_[DIM_Y].outPtr(),
-												 vel_[DIM_Z].outPtr(),
 												 pressure_.inPtr());
 		swapVelocities();
 	}
@@ -282,10 +269,12 @@ void FluidSolver::swapVelocities()
 void FluidSolver::dimIs(FluidSolver::Dimension d, uint value)
 {
 	//Is not power of two?
-	if (value == 1 || (value & (value-1)) == 0) {
-		std::cerr << "Dimension is not power of two." << std::endl;
+	/*TODO
+	 * if (value == 1 || (value & (value-1)) == 0) {
+		std::cerr << "Dimension " << value 
+				<< " is not power of two." << std::endl;
 		exit(1);
-	}
+	}*/
 	dim_[d] = value;
 }
 

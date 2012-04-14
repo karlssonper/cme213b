@@ -2,12 +2,12 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "fluidrender.h"
-#include "fluidsolverthread.h"
+#include "RenderWindow.h"
 namespace Ui {
 class MainWindow;
 }
 
+class FluidSolver;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -17,10 +17,8 @@ public:
     ~MainWindow();
 
 protected:
-    fluidRender *renderWindow;
-    FluidSolver *fluidSolver;
-
-    
+    RenderWindow *renderWindow_;
+    FluidSolver * fluidSolver_;
 private:
     Ui::MainWindow *ui;
 };
