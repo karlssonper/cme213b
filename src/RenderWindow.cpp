@@ -15,6 +15,13 @@ void RenderWindow::initializeGL()
 {
     glewInit();
 
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
     //TODO, query what device to use
     cudaGLSetGLDevice(0);
 

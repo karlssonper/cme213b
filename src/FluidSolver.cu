@@ -7,19 +7,7 @@ T bilerp(const T v00,
          const T v01,
          const T v11)
 {
-    return 0.0f;
-}
-
-__device__
-unsigned int worldToIdx2D()
-{
-
-}
-
-__device__
-float3 idx2DToWorld()
-{
-
+    return v00;
 }
 
 __global__
