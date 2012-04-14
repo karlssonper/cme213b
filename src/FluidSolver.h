@@ -37,8 +37,6 @@ protected:
     float2 externalForce_;
     float sphereRadius_;
     float2 sphereCenter_;
-    dim3 blocks_;
-    dim3 threads_;
     void dimIs(Dimension d, unsigned int value);
     void swapVelocities();
     void buildLevelSet();
