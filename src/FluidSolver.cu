@@ -51,7 +51,17 @@ void addExternalForces(const float dt,
 				       float * d_velOut_x,
 					   float * d_velOut_y)
 {
+    // Get Index
+    // Notes on indexing:
+    int index  = blockDim.x* (blockIdx.x + blockIdx.y*gridDim.x) +
+            threadIdx.y*blockDim.x + threadIdx.x;
 
+    // Only compute external forces for fluid voxels
+ //   if (d_levelset(index))
+    {
+        d_velOut_x[index] = d_velIn_x[index] + dt*force.x;
+        d_velOut_y[index] = d_velIn_y[index] + dt*force.y;
+    }
 }
 
 __global__
