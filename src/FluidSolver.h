@@ -8,26 +8,35 @@
 #ifndef FLUIDSOLVER_H_
 #define FLUIDSOLVER_H_
 
+#define MASK_SOLID 0
+#define MASK_FLUID 1
+
 #include "DeviceArray.h"
 
 class FluidSolver
 {
 public:
-	FluidSolver(unsigned int dim_x, unsigned int dim_y, unsigned int dim_z);
+	FluidSolver(unsigned int dim_x, unsigned int dim_y);
 	void init();
 	void solve (const float dt);
 	void render();
 	void marchingCubes();
 protected:
-	enum Dimension{ DIM_X = 0, DIM_Y = 1, DIM_Z = 2, NUM_DIMS = 3 };
+	enum Dimension{ DIM_X = 0, DIM_Y = 1, NUM_DIMS = 2 };
 	unsigned int dim_[NUM_DIMS];
+	float dx_;
 	DeviceArray<float> vel_[NUM_DIMS];
 	DeviceArray<float> pressure_;
 	DeviceArray<float> levelset_;
+
+	thrust::device_vector<unsigned char> mask_;
 	thrust::device_vector<float> velMag_;
+	thrust::device_vector<float2> surfacePoints_;
 	unsigned int initVolume_;
 	unsigned int curVolume_;
-	float3 externalForce_;
+	float2 externalForce_;
+	float sphereRadius_;
+	float2 sphereCenter_;
 	dim3 blocks_;
 	dim3 threads_;
 	void dimIs(Dimension d, unsigned int value);
