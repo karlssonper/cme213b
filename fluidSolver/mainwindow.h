@@ -17,6 +17,7 @@ public:
 
 protected:
     fluidRender *renderWindow;
+    FluidSolver *fluidSolver;
 
     
 private:

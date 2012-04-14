@@ -8,6 +8,7 @@ fluidRender::fluidRender(QWidget *parent, FluidSolver *solver) :
 
 void fluidRender::paintGL()
 {
+    // pass gravity_ to Solver here
     // solver_.solve()
 
     // Call fluidsolver render()

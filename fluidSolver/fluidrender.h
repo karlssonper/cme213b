@@ -14,6 +14,7 @@ public:
 signals:
     
 public slots:
+   void gravityChanged(int gravity) {gravity_ = gravity;}
 
 protected:
     void paintGL();

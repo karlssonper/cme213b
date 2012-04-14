@@ -16,14 +16,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->fluidSolver = new FluidSolver(64,64,64);
     this->renderWindow = new fluidRender(this,fluidSolver);
-    this->solverThread = new fluidSolverThread(this,fluidSolver);
+
 
     this->ui->scrollArea->setWidget(this->renderWindow);
 
     connect(this->ui->gravitySlider,SIGNAL(sliderMoved(int)),
             this->ui->gravityNumber,SLOT(display(int)));
     connect(this->ui->gravitySlider,SIGNAL(sliderMoved(int)),
-            this->solverThread,SLOT(gravityChanged(int)));
+            renderWindow,SLOT(gravityChanged(int)));
 
 }
 
