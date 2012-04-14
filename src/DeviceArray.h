@@ -41,6 +41,9 @@ public:
 
 	T * outPtr()
     {
+	    std::cerr << "lol" << std::endl;
+		thrust::raw_pointer_cast(&vec_[out_][0]);
+		std::cerr << "lewis carlos" << std::endl;
 		return thrust::raw_pointer_cast(&vec_[out_][0]);
 	};
 

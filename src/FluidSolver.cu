@@ -243,8 +243,10 @@ void FluidSolver::init()
                                                sphereCenter_,
                                                dx_,
                                                levelset_.outPtr());
+    std::cout << "FluidSolver: Build done..." << std::endl;
     initVolume_ = fluidVolume();
     curVolume_ = initVolume_;
+    std::cout << "FluidSolver: Initialization done." << std::endl;
 }
 
 template<int T_THREADS>

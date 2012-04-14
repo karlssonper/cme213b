@@ -6,6 +6,7 @@
 RenderWindow::RenderWindow(QWidget *parent, FluidSolver *solver) :
     QGLWidget(parent), fluidSolver_(solver), pbo_(0), tex_(0)
 {
+    cuda_pbo_resource_ = 0;
     //TODO, make user define this
     width_ = 256;
     height_ = 256;
@@ -33,7 +34,7 @@ void RenderWindow::paintGL()
     //TODO calculate dt
     float dt = 1.0f/25.0f;
 
-    fluidSolver_->solve(dt);
+    //fluidSolver_->solve(dt);
 
     // map PBO to get CUDA device pointer
     cudaGraphicsMapResources(1, &cuda_pbo_resource_, 0);
@@ -48,7 +49,7 @@ void RenderWindow::paintGL()
     cudaMemset(d_output, 0, width_*height_*4);
 
     // call CUDA kernel, writing results to PBO
-    fluidSolver_->render();
+    //fluidSolver_->render();
 
     cudaGraphicsUnmapResources(1, &cuda_pbo_resource_, 0);
 
@@ -84,6 +85,7 @@ void RenderWindow::paintGL()
 
 void RenderWindow::initPBO()
 {
+    std::cout << "Initiating Pixel Buffer Object..." << std::endl;
    if (pbo_) {
         // unregister this buffer object from CUDA C
         cudaGraphicsUnregisterResource(cuda_pbo_resource_);
