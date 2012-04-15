@@ -27,6 +27,11 @@ RenderWindow::RenderWindow(QWidget *parent) :
     //TODO, make user define this
     width_ = 256;
     height_ = 256;
+
+    // Set up Timer to paint scene
+    timer = new QTimer(this);
+    connect(timer,SIGNAL(timeout()),this,SLOT(updateGL()));
+
 }
 
 void RenderWindow::resizeGL(int w, int h) {
@@ -64,6 +69,10 @@ void RenderWindow::initializeGL()
     initPBO();
 
     fluidSolver_ = new FluidSolver(256,256, 16, 1.0f/256.0f);
+
+
+    // Start Timer to paint scene
+    timer->start(50,false);
 }
 
 void RenderWindow::paintGL()
@@ -131,7 +140,7 @@ void RenderWindow::paintGL()
 
 void RenderWindow::initPBO()
 {
-    std::cout << "Initiating Pixel Buffer Object..." << std::endl;
+   std::cout << "Initiating Pixel Buffer Object..." << std::endl;
    if (pbo_) {
         // unregister this buffer object from CUDA C
         CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(cuda_pbo_resource_));

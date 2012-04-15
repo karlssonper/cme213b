@@ -2,6 +2,7 @@
 #define RENDERWINDOW_H
 
 #include <QGLWidget>
+#include <QTimer>
 #include <cuda_gl_interop.h>
 
 class FluidSolver;
@@ -27,6 +28,12 @@ protected:
     struct cudaGraphicsResource *cuda_pbo_resource_;
 private:
     void initPBO();
+    unsigned int image_width;
+    unsigned int image_height;
+    QGLBuffer*   pixelBuffer;
+    GLuint*      textureID;
+
+    QTimer* timer;
 };
 
 #endif // RENDERWINDOW_H
