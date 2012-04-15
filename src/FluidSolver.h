@@ -10,10 +10,12 @@
 
 #define MASK_SOLID 0
 #define MASK_FLUID 1
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include "DeviceArray.h"
+#include "DeviceArraysNoSwap.h"
 
 class FluidSolver
 {
@@ -30,10 +32,7 @@ protected:
     DeviceArray vel_[NUM_DIMS];
     DeviceArray pressure_;
     DeviceArray levelset_;
-
-    //thrust::device_vector<unsigned char> mask_;
-    //thrust::device_vector<float> velMag_;
-    //thrust::device_vector<float2> surfacePoints_;
+    DeviceArraysNoSwap noSwapArrays_;
     unsigned int initVolume_;
     unsigned int curVolume_;
     float2 externalForce_;

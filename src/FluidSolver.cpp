@@ -1,5 +1,6 @@
 #include "FluidSolver.h"
 #include "FluidKernels.h"
+#include <iostream>
 
 FluidSolver::FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dx) 
         : dx_(dx)
@@ -10,6 +11,8 @@ FluidSolver::FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dx)
     
     //TODO make scale
     blocks = dim3(threadsPerDim, threadsPerDim);
+
+    externalForce_ = make_float2(0.0f, -9.82f);
 }
 
 void FluidSolver::init()
@@ -17,6 +20,7 @@ void FluidSolver::init()
     std::cout << "FluidSolver: Initiating a new domain, " <<  
        dim_[DIM_X] << " x " << dim_[DIM_Y] << std::endl;
     const unsigned int numVoxels = dim_[DIM_X] * dim_[DIM_Y]; 
+
     vel_[DIM_X].resize(numVoxels);
     vel_[DIM_Y].resize(numVoxels);
     pressure_.resize(numVoxels);
@@ -41,27 +45,7 @@ void FluidSolver::init()
                         sphereCenter_,
                         dx_,
                         levelset_.outPtr());
-
-    void advectLevelset(dim3 blocks,
-                                   dim3 threads,
-                                   const float dt,
-                                   const float inv_dx,
-                                   const unsigned char * d_mask,
-                                   const float * d_levelsetIn,
-                                   float * d_levelsetOut,
-                                   const float * d_velIn_x,
-                                   const float * d_velIn_y);
-
-    const unsigned char * lol;
-    advectLevelset(blocks,
-            threads,
-            1.0f,
-            1.0f,
-            lol,
-            vel_[DIM_X].inPtr(),
-            vel_[DIM_X].outPtr(),
-            vel_[DIM_X].inPtr(),
-            vel_[DIM_X].inPtr());
+    levelset_.swap();
 
     std::cout << "FluidSolver: Build done..." << std::endl;
     initVolume_ = fluidVolume();
@@ -73,7 +57,7 @@ template<int T_THREADS>
 void FluidSolver::solve(const float dt)
 {
     float elapsed = 0.0f;
-    float timestep;
+    float timestep = dt;
 
     //Update the fluid
     while(elapsed < dt) {
@@ -88,12 +72,13 @@ void FluidSolver::solve(const float dt)
                           vel_[DIM_Y].inPtr());
         //Do thrust stuff to reduce 2nd part.
         timestep = *thrust::max_element(velMag_.begin(), velMag_.end());
-
+         */
         //No need to solve for more than this frame
         if (timestep > (dt - elapsed))
             timestep = dt - elapsed;
         elapsed += timestep;
 
+        /*
         //2. Extrapolate the velocity field, i.e make sure there are velocities
         //   in a band outside the fluid region.
         float2 * surfacePoints = thrust::raw_pointer_cast(&surfacePoints_[0]);
@@ -106,7 +91,7 @@ void FluidSolver::solve(const float dt)
                               vel_[DIM_X].outPtr(),
                               vel_[DIM_Y].outPtr());
         swapVelocities();
-
+         */
         //3. Add external forces to the velocity field.
         addExternalForces(blocks,
                           threads,
@@ -118,6 +103,7 @@ void FluidSolver::solve(const float dt)
                           vel_[DIM_X].outPtr(),
                           vel_[DIM_Y].outPtr());
         swapVelocities();
+        /*
 
         //4. Advect the velocity field in itself
         advectVelocities(blocks,
@@ -129,19 +115,20 @@ void FluidSolver::solve(const float dt)
                          vel_[DIM_X].outPtr(),
                          vel_[DIM_Y].outPtr());
         swapVelocities();
-
+         */
         //5. Advect the surface tracking Level Set.
-        advectLevelset<T_THREADS>(blocks,
-                                  threads,
-                                  timestep,
-                                  1.0f / dx_,
-                                  mask,
-                                  levelset_.inPtr(),
-                                  levelset_.outPtr(),
-                                  vel_[DIM_X].inPtr(),
-                                  vel_[DIM_Y].inPtr());
+        advectLevelset(blocks,
+                       threads,
+                       timestep,
+                       1.0f / dx_,
+                       noSwapArrays_.mask(),
+                       levelset_.inPtr(),
+                       levelset_.outPtr(),
+                       vel_[DIM_X].inPtr(),
+                       vel_[DIM_Y].inPtr());
         levelset_.swap();
 
+        /*
         //6. Reinitialize the Level Set so it is numerically stable.
         reinitLevelset(blocks,
                        threads,
@@ -192,7 +179,7 @@ void FluidSolver::solve(const float dt)
 
 void FluidSolver::render(uchar4 * d_pbo)
 {
-    writePBO(blocks, threads, d_pbo, levelset_.inPtr());
+    writePBO(blocks, threads, d_pbo, vel_[DIM_X].inPtr());
     //raycast<<<blocks_, threads_>>>(levelset_.inPtr());
 }
 
