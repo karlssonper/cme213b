@@ -2,6 +2,7 @@
 #include "RenderWindow.h"
 #include "FluidSolver.h"
 #include <stdio.h>
+#include <iostream>
 
 #  define CUDA_SAFE_CALL_NO_SYNC( call) do {                                 \
     cudaError err = call;                                                    \
@@ -69,21 +70,16 @@ void RenderWindow::initializeGL()
     initPBO();
 
     fluidSolver_ = new FluidSolver(256,256, 16, 1.0f/256.0f);
-
+    fluidSolver_->init();
 
     // Start Timer to paint scene
     timer->start(50,false);
+
 }
 
 void RenderWindow::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(1,0,0);
-    glBegin(GL_POLYGON);
-    glVertex2f(0,0);
-    glVertex2f(0.2,1);
-    glVertex2f(1,0.2);
-    glEnd();
 
     //TODO calculate dt
     float dt = 1.0f/25.0f;
@@ -108,13 +104,10 @@ void RenderWindow::paintGL()
 
     CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &cuda_pbo_resource_, 0));
 
-    // display results
-    //glClear(GL_COLOR_BUFFER_BIT);
-
     // draw image from PBO
-    //glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
 
-    //glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     // draw using texture
 
@@ -176,7 +169,7 @@ void RenderWindow::initPBO()
                  GL_RGBA,
                  GL_UNSIGNED_BYTE,
                  NULL);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
 }

@@ -1,4 +1,3 @@
-//template<int T_THREADS>
 __global__
 void advectLevelset(const float dt,
                     const float inv_dx,
