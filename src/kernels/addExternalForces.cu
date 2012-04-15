@@ -15,8 +15,8 @@ void addExternalForces(const float dt,
     // Only compute external forces for fluid voxels
  //   if (d_levelset(index))
     {
-        d_velOut_x[index] = d_velIn_x[index] + dt*force.x;
-        d_velOut_y[index] = d_velIn_y[index] + dt*force.y;
+        d_velOut_x[index] = 10;//d_velIn_x[index] + dt*force.x;
+        d_velOut_y[index] = 10;//d_velIn_y[index] + dt*force.y;
     }
 }
 
