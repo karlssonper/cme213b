@@ -24,6 +24,9 @@ public:
     float2 * surfacePoints();
     const float2 * surfacePoints() const;
     thrust::device_vector<float2> & surfacePointsVec();
+
+    void setZero();
+    void resize(unsigned int size);
 private:
     thrust::device_vector<unsigned char> mask_;
     thrust::device_vector<float> velMag_;

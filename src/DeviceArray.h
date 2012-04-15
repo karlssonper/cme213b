@@ -19,17 +19,12 @@ private:
 	thrust::device_vector<float> vec_[2];
 public:
 	DeviceArray();
-
 	DeviceArray(unsigned int size);
-
 	const float * inPtr() const;
-
 	const thrust::device_vector<float> & inVec() const;
-
 	float * outPtr();
-
 	void swap();
-
+	void setZero();
 	void resize(unsigned int size);
 };
 

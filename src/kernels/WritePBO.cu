@@ -10,7 +10,7 @@ void writePBO(uchar4 * d_pbo, const float * d_levelset)
     
     d_pbo[idx].x = 0;
     d_pbo[idx].y = 0;
-    d_pbo[idx].z = d_levelset[idx] * 10;
+    d_pbo[idx].z = -d_levelset[idx] * 10;
     /*if (d_levelset[idx] <= 0)
         d_pbo[idx].z = 255;
     else

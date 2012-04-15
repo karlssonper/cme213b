@@ -73,7 +73,7 @@ void RenderWindow::initializeGL()
     fluidSolver_->init();
 
     // Start Timer to paint scene
-    timer->start(50,false);
+    timer->start(50);
 
 }
 

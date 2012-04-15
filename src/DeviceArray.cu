@@ -1,4 +1,5 @@
 #include "DeviceArray.h"
+#include <thrust/fill.h>
 
 DeviceArray::DeviceArray() : in_(FIRST), out_(SECOND)
 {
@@ -31,6 +32,12 @@ void DeviceArray::swap()
     in_ = out_;
     out_ = temp;
 };
+
+void DeviceArray::setZero()
+{
+    thrust::fill(vec_[FIRST].begin(), vec_[FIRST].end(), 0.0f);
+    thrust::fill(vec_[SECOND].begin(), vec_[SECOND].end(), 0.0f);   
+}
 
 void DeviceArray::resize(unsigned int size)
 {

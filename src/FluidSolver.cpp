@@ -25,6 +25,7 @@ void FluidSolver::init()
     vel_[DIM_Y].resize(numVoxels);
     pressure_.resize(numVoxels);
     levelset_.resize(numVoxels);
+    //noSwapArrays_.resize(numVoxels);
     //surfacePoints_.resize(numVoxels);
     
     //Resize to number of blocks

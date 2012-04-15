@@ -26,13 +26,7 @@ protected:
     GLuint pbo_;
     GLuint tex_;
     struct cudaGraphicsResource *cuda_pbo_resource_;
-private:
     void initPBO();
-    unsigned int image_width;
-    unsigned int image_height;
-    QGLBuffer*   pixelBuffer;
-    GLuint*      textureID;
-
     QTimer* timer;
 };
 
