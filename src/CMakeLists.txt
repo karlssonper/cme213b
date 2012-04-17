@@ -10,7 +10,7 @@ SET(CUDA_KERNELS kernels/AddExternalForces.cu
 				 kernels/WritePBO.cu)
 
 # QT variables
-SET(app_SOURCES main MainWindow RenderWindow FluidSolver DeviceArray.cu DeviceArraysNoSwap.cu ${CUDA_KERNELS})
+SET(app_SOURCES main MainWindow RenderWindow FluidSolver DeviceArray.cu ${CUDA_KERNELS})
 SET(app_HEADERS MainWindow.h RenderWindow.h)
 
 QT4_WRAP_CPP(app_HEADERS_MOC ${app_HEADERS})

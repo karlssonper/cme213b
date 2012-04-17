@@ -14,10 +14,22 @@ MainWindow::MainWindow(QWidget *parent) :
     renderWindow_ = new RenderWindow(this);
 
     ui->scrollArea->setWidget(renderWindow_);
-    //connect(ui->gravitySlider,SIGNAL(sliderMoved(int)),
-    //        ui->gravityNumber,SLOT(display(int)));
-    //connect(ui->gravitySlider,SIGNAL(sliderMoved(int)),
-    //        renderWindow_,SLOT(gravityChanged(int)));
+    connect(ui->gravitySlider,SIGNAL(sliderMoved(int)),
+            ui->gravityNumber,SLOT(display(int)));
+    connect(ui->playButton,SIGNAL(clicked()),
+            renderWindow_,SLOT(toggleRunStatus()));
+    connect(ui->stepButton,SIGNAL(clicked()),
+            renderWindow_,SLOT(stepForward()));
+    connect(ui->playButton,SIGNAL(clicked()),
+            this,SLOT(togglePlayButtonStatus()));
+}
+
+void MainWindow::togglePlayButtonStatus()
+{
+    if (ui->playButton->text() == QString("Play"))
+        ui->playButton->setText(QString("Pause"));
+    else
+        ui->playButton->setText(QString("Play"));
 }
 
 MainWindow::~MainWindow()

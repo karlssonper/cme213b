@@ -1,72 +1,31 @@
-__global__
-void advectLevelset(const float dt,
-                    const float inv_dx,
+#include "TemplateMacros.h"
+#include "LoadSharedMemory.h"
+#include "../FluidSolver.h"
+
+template<TEMPLATE_ARGS()>
+__global__ 
+void advectLevelset(const float           dt,
+                    const float           inv_dx,
                     const unsigned char * d_mask,
-                    const float * d_levelsetIn,
-                    float * d_levelsetOut,
-                    const float * d_velIn_x,
-                    const float * d_velIn_y)
+                    const float *         d_levelsetIn,
+                    float *               d_levelsetOut,
+                    const float *         d_velIn_x,
+                    const float *         d_velIn_y)
 {
-    //todo remove
-    const int T_THREADS = 16;
     const int i = threadIdx.x + blockDim.x * blockIdx.x;
     const int j = threadIdx.y + blockDim.y * blockIdx.y;
     const int g_idx = i + j * blockDim.x * gridDim.x;
 
     //Allocate shared memory for Level Set, +2 in for apron
-    __shared__ float s_phi[(T_THREADS + 2) * (T_THREADS + 2)];
-
-    //Load inner phi
-    int s_idx = threadIdx.x + 1 + (threadIdx.y + 1) * (blockDim.x + 2);
-    s_phi[s_idx] = d_levelsetIn[g_idx];
-
-    //Load phi at the apron
-    //Left boundary
-    if (threadIdx.x == 0 && blockIdx.x != 0) {
-        s_idx = (threadIdx.y + 1) * (blockDim.x + 2);
-        s_phi[s_idx] = d_levelsetIn[g_idx - 1];
-    }
-    //Right boundary
-    if (threadIdx.x == blockDim.x - 1 && blockIdx.x != gridDim.x - 1) {
-        s_idx = (threadIdx.y + 1) * (blockDim.x + 2) + threadIdx.x + 2;
-        s_phi[s_idx] = d_levelsetIn[g_idx + 1];
-    }
-    //Bottom boundary
-    if (threadIdx.y == 0 && blockIdx.y != 0) {
-        s_idx = threadIdx.x + 1;
-        s_phi[s_idx] = d_levelsetIn[g_idx - gridDim.x * blockDim.x];
-    }
-    //Top boundary
-    if (threadIdx.y == blockDim.y - 1 && blockIdx.y != gridDim.y - 1) {
-        s_idx = (threadIdx.y + 2) * (blockDim.x + 2) + threadIdx.x + 1;
-        s_phi[s_idx] = d_levelsetIn[g_idx + gridDim.x * blockDim.x];
-    }
-    //Sync all threads
-    __syncthreads();
+    __shared__ float s_phi[(T_THREADS_X + 2) * (T_THREADS_Y + 2)];
 
     //Allocate memory for velocities
-    __shared__ float s_vel_x[(T_THREADS + 1)*(T_THREADS + 1)];
-    __shared__ float s_vel_y[(T_THREADS + 1)*(T_THREADS + 1)];
-
-    s_idx = threadIdx.y * (blockDim.x + 1) + threadIdx.x;
-    //Because of MaC grid, global memeory has one extra component
-    int g_idx_vel = i * j * (blockDim.x * gridDim.x + 1);
-
-    //Load inner velocities
-    s_vel_x[s_idx] = d_velIn_x[g_idx_vel];
-    s_vel_y[s_idx] = d_velIn_y[g_idx_vel];
-
-    //Load boundary velocities
-    //Right boundary
-    if (threadIdx.x == blockDim.x - 1 && blockIdx.x != gridDim.x - 1) {
-        s_idx = threadIdx.y * (blockDim.x + 1) + threadIdx.x + 1;
-        s_vel_x[s_idx] = d_velIn_x[g_idx_vel + 1];
-    }
-    //Top boundary
-    if (threadIdx.y == blockDim.y - 1 && blockIdx.y != gridDim.y - 1) {
-        s_idx = (threadIdx.y + 1) * (blockDim.x + 1) + threadIdx.x;
-        s_vel_x[s_idx] = d_velIn_x[g_idx_vel + blockDim.x * gridDim.x + 1];
-    }
+    __shared__ float s_vel_x[(T_THREADS_X + 1)* T_THREADS_Y];
+    __shared__ float s_vel_y[(T_THREADS_Y + 1)* T_THREADS_X];
+    
+    //Load data
+    loadValueInCenter(s_phi, d_levelsetIn, i, j);
+    loadValuesAtFaces(s_vel_x, s_vel_y, d_velIn_x, d_velIn_y, i, j);
 
     //Sync all threads
     __syncthreads();
@@ -74,39 +33,47 @@ void advectLevelset(const float dt,
     int vel_idx = threadIdx.x + threadIdx.y * (blockDim.x + 1);
     float vel_x = (s_vel_x[vel_idx] + s_vel_x[vel_idx + 1]) * 0.5f;
     float vel_y = (s_vel_y[vel_idx] + s_vel_y[vel_idx + blockDim.x + 1]) * 0.5f;
-
+    
     float dphidx, dphidy;
-    int phi_idx = threadIdx.x + 1 + (threadIdx.y + 1) * (blockDim.x + 2);
+    int phi_idx = centerValueCenterIdx();
     float phi = s_phi[phi_idx];
     if (vel_x > 0.0f) {
-        dphidx = (phi - s_phi[phi_idx - 1]) * inv_dx;
+        dphidx = (phi - s_phi[centerValueLeftIdx(phi_idx)]) * inv_dx;
     } else {
-        dphidx = (s_phi[phi_idx + 1] - phi) * inv_dx;
+        dphidx = (s_phi[centerValueRightIdx(phi_idx)] - phi) * inv_dx;
     }
     if (vel_y > 0.0f) {
-        dphidy = (phi - s_phi[phi_idx - (blockDim.x + 2)]) * inv_dx;
+        dphidy = (phi - s_phi[centerValueBelowIdx(phi_idx)]) * inv_dx;
     } else {
-        dphidy = (s_phi[phi_idx + (blockDim.x + 2)] - phi) * inv_dx;
+        dphidy = (s_phi[centerValueAboveIdx(phi_idx)] - phi) * inv_dx;
     }
 
-    d_levelsetOut[g_idx] = phi - dt * (dphidx * vel_x + dphidy * vel_y);
+    //TODO make it scale
+    if (i != 0 && j != 0 && i != 255 && j != 255)
+        d_levelsetOut[g_idx] = phi - dt * (dphidx * vel_x + dphidy * vel_y);
+    else 
+        d_levelsetOut[g_idx] = phi;
 }
 
-void advectLevelset(dim3 blocks,
-                    dim3 threads,
-                    const float dt,
-                    const float inv_dx,
-                    const unsigned char * d_mask,
-                    const float * d_levelsetIn,
-                    float * d_levelsetOut,
-                    const float * d_velIn_x,
-                    const float * d_velIn_y)
+template<TEMPLATE_ARGS()>
+void advectLevelset(FluidSolver * solver)
 {
-    advectLevelset<<<blocks,threads>>>(dt, 
-                                       inv_dx, 
-                                       d_mask, 
-                                       d_levelsetIn, 
-                                       d_levelsetOut, 
-                                       d_velIn_x, 
-                                       d_velIn_y);
+    dim3                blocks = solver->blocks();
+    dim3               threads = solver->threads();
+    const float             dt = solver->timestep();
+    const float          invDx = 1.0f / solver->dx();
+    const unsigned char * mask = solver->mask();
+    const float *         lsIn = solver->levelsetIn();
+    float *              lsOut = solver->levelsetOut();
+    const float *           vx = solver->velocityXIn();
+    const float *           vy = solver->velocityYIn();
+    advectLevelset<TEMPLATE_ARGS_RUN()><<<blocks,threads>>>(dt, 
+                                                            invDx, 
+                                                            mask, 
+                                                            lsIn, 
+                                                            lsOut, 
+                                                            vx, 
+                                                            vy);
 }
+
+EXPLICIT_TEMPLATE_FUNCTION_INSTANTIATION(advectLevelset,FluidSolver * solver)

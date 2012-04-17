@@ -2,15 +2,15 @@
 #include "FluidKernels.h"
 #include <iostream>
 
-FluidSolver::FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dx) 
-        : dx_(dx)
+FluidSolver::FluidSolver(int dim_x, int dim_y, int threadsPerDim, float dxWorld)
+        : dx_(dxWorld)
 {
     dimIs(DIM_X, dim_x);
     dimIs(DIM_Y, dim_y);
-    threads = dim3(threadsPerDim, threadsPerDim);
+    threads_ = dim3(threadsPerDim, threadsPerDim);
     
     //TODO make scale
-    blocks = dim3(threadsPerDim, threadsPerDim);
+    blocks_ = dim3(threadsPerDim, threadsPerDim);
 
     externalForce_ = make_float2(0.0f, -9.82f);
 }
@@ -21,16 +21,24 @@ void FluidSolver::init()
        dim_[DIM_X] << " x " << dim_[DIM_Y] << std::endl;
     const unsigned int numVoxels = dim_[DIM_X] * dim_[DIM_Y]; 
 
-    vel_[DIM_X].resize(numVoxels);
-    vel_[DIM_Y].resize(numVoxels);
+    vel_[DIM_X].resize(numVoxels +  dim_[DIM_X]);
+    vel_[DIM_Y].resize(numVoxels +  dim_[DIM_Y]);
     pressure_.resize(numVoxels);
     levelset_.resize(numVoxels);
-    //noSwapArrays_.resize(numVoxels);
-    //surfacePoints_.resize(numVoxels);
-    
+    noSwapArrays_.surfacePointsResize(numVoxels);
+    noSwapArrays_.maskResize(numVoxels);
+
+    //TODO
     //Resize to number of blocks
-    //velMag_.resize(TODO);
+    //noSwapArrays_.velocityMagVec().resize(numVoxels);
+
+    vel_[DIM_X].setZero();
+    vel_[DIM_Y].setZero();
+    noSwapArrays_.setZero();
     
+    //TODO
+    //Build mask
+
     //Build Sphere or whatever to levelset_
     //Center in the grids midpoint
     sphereCenter_ = make_float2(0.5 * dx_ * dim_[DIM_X],
@@ -40,12 +48,7 @@ void FluidSolver::init()
     sphereRadius_ = 0.25 * dx_ * dim_[DIM_X];
     
     std::cout << "FluidSolver: Building level set sphere..." << std::endl;
-    buildLevelsetSphere(blocks,
-                        threads,
-                        sphereRadius_, 
-                        sphereCenter_,
-                        dx_,
-                        levelset_.outPtr());
+    buildLevelsetSphere(this);
     levelset_.swap();
 
     std::cout << "FluidSolver: Build done..." << std::endl;
@@ -54,11 +57,14 @@ void FluidSolver::init()
     std::cout << "FluidSolver: Initialization done." << std::endl;
 }
 
-template<int T_THREADS>
+template<int T_THREADS_X, int T_THREADS_Y>
 void FluidSolver::solve(const float dt)
 {
+    static char newSolveMsg[] = "FluidSolver: New solve for ";
+    std::cout << newSolveMsg << dt << "s" << std::endl;
+
     float elapsed = 0.0f;
-    float timestep = dt;
+    curTimestep_ = dt;
 
     //Update the fluid
     while(elapsed < dt) {
@@ -75,9 +81,12 @@ void FluidSolver::solve(const float dt)
         timestep = *thrust::max_element(velMag_.begin(), velMag_.end());
          */
         //No need to solve for more than this frame
-        if (timestep > (dt - elapsed))
-            timestep = dt - elapsed;
-        elapsed += timestep;
+        if (curTimestep_ > (dt - elapsed))
+            curTimestep_ = dt - elapsed;
+        elapsed += curTimestep_;
+
+        static char timstepMsg[] = "FluidSolver: Timestep in iteration is";
+        std::cout << timstepMsg << curTimestep_ << "s" << std::endl;
 
         /*
         //2. Extrapolate the velocity field, i.e make sure there are velocities
@@ -94,15 +103,7 @@ void FluidSolver::solve(const float dt)
         swapVelocities();
          */
         //3. Add external forces to the velocity field.
-        addExternalForces(blocks,
-                          threads,
-                          timestep,
-                          externalForce_,
-                          levelset_.inPtr(),
-                          vel_[DIM_X].inPtr(),
-                          vel_[DIM_Y].inPtr(),
-                          vel_[DIM_X].outPtr(),
-                          vel_[DIM_Y].outPtr());
+        addExternalForces(this);
         swapVelocities();
         /*
 
@@ -118,15 +119,7 @@ void FluidSolver::solve(const float dt)
         swapVelocities();
          */
         //5. Advect the surface tracking Level Set.
-        advectLevelset(blocks,
-                       threads,
-                       timestep,
-                       1.0f / dx_,
-                       noSwapArrays_.mask(),
-                       levelset_.inPtr(),
-                       levelset_.outPtr(),
-                       vel_[DIM_X].inPtr(),
-                       vel_[DIM_Y].inPtr());
+        advectLevelset<T_THREADS_X, T_THREADS_Y>(this);
         levelset_.swap();
 
         /*
@@ -166,9 +159,28 @@ void FluidSolver::solve(const float dt)
     }
 }
 
+template<int T_THREADS_X>
 void FluidSolver::solve(const float dt)
 {
-    switch (threads.x ) {
+    switch (threads().y ) {
+        case 8:
+            solve<T_THREADS_X,8>(dt);
+            break;
+        case 16:
+            solve<T_THREADS_X,16>(dt);
+            break;
+        case 32:
+            solve<T_THREADS_X,32>(dt);
+            break;
+    }
+}
+
+void FluidSolver::solve(const float dt)
+{
+    switch (threads().x ) {
+        case 8:
+            solve<8>(dt);
+            break;
         case 16:
             solve<16>(dt);
             break;
@@ -180,7 +192,7 @@ void FluidSolver::solve(const float dt)
 
 void FluidSolver::render(uchar4 * d_pbo)
 {
-    writePBO(blocks, threads, d_pbo, vel_[DIM_X].inPtr());
+    writePBO(blocks(), threads(), d_pbo, levelset_.inPtr());
     //raycast<<<blocks_, threads_>>>(levelset_.inPtr());
 }
 

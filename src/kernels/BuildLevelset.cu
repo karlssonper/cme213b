@@ -1,3 +1,5 @@
+#include "../FluidSolver.h"
+
 __global__
 void buildLevelsetSphere(const float r,
                          const float2 center,
@@ -13,12 +15,13 @@ void buildLevelsetSphere(const float r,
     d_levelset[idx] = sqrt(x*x+y*y) - r;
 }
 
-void buildLevelsetSphere(dim3 blocks,
-                         dim3 threads,
-                         const float r,
-                         const float2 center,
-                         const float dx,
-                         float * d_levelset)
+void buildLevelsetSphere(FluidSolver * solver)
 {
-    buildLevelsetSphere<<<blocks,threads>>>(r, center, dx, d_levelset);
+    dim3                blocks = solver->blocks();
+    dim3               threads = solver->threads();
+    const float             dx = solver->dx();
+    const float              r = solver->sphereRadius();
+    const float2        center = solver->sphereCenter();
+    float *              lsOut = solver->levelsetOut();
+    buildLevelsetSphere<<<blocks,threads>>>(r, center, dx, lsOut);
 }

@@ -11,15 +11,7 @@
 dim3 blocks;
 dim3 threads;
 
-void addExternalForces(dim3 blocks,
-                       dim3 threads,
-                       const float dt,
-                       const float2 force,
-                       const float * d_levelset,
-                       const float * d_velIn_x,
-                       const float * d_velIn_y,
-                       float * d_velOut_x,
-                       float * d_velOut_y);
+void addExternalForces(FluidSolver * solver);
 
 void advectVelocities(dim3 blocks,
                       dim3 threads,
@@ -30,22 +22,10 @@ void advectVelocities(dim3 blocks,
                       float * d_velOut_x,
                       float * d_velOut_y);
 
-void advectLevelset(dim3 blocks,
-                    dim3 threads,
-                    const float dt,
-                    const float inv_dx,
-                    const unsigned char * d_mask,
-                    const float * d_levelsetIn,
-                    float * d_levelsetOut,
-                    const float * d_velIn_x,
-                    const float * d_velIn_y);
+template<int T_THREADS_X, int T_THREADS_Y>
+void advectLevelset(FluidSolver * solver);
 
-void buildLevelsetSphere(dim3 blocks,
-                         dim3 threads,
-                         const float r,
-                         const float2 center,
-                         const float dx,
-                         float * d_levelset);
+void buildLevelsetSphere(FluidSolver * solver);
 
 void extrapolateVelocities(dim3 blocks,
                            dim3 threads,
@@ -56,11 +36,8 @@ void extrapolateVelocities(dim3 blocks,
                            float * d_velOut_x,
                            float * d_velOut_y);
 
-void reinitLevelset(dim3 blocks,
-                    dim3 threads,
-                    const float * d_levelsetIn,
-                    float * d_levelsetOut,
-                    float2 * d_surfacePoints);
+template<int T_THREADS_X, int T_THREADS_Y>
+void reinitLevelset(FluidSolver * solver);
 
 void solvePressure(dim3 blocks,
                    dim3 threads,

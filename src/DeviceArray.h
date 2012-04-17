@@ -28,4 +28,29 @@ public:
 	void resize(unsigned int size);
 };
 
+class DeviceArraysNoSwap
+{
+public:
+    unsigned char * mask();
+    const unsigned char * mask() const;
+    void maskResize(unsigned int size);
+    thrust::device_vector<unsigned char>& maskVec();
+
+    float * velocityMag();
+    const float * velocityMag() const;
+    void velocityMagResize(unsigned int size);
+    thrust::device_vector<float> & velocityMagVec();
+
+    float2 * surfacePoints();
+    const float2 * surfacePoints() const;
+    void surfacePointsResize(unsigned int size);
+    thrust::device_vector<float2> & surfacePointsVec();
+
+    void setZero();
+private:
+    thrust::device_vector<unsigned char> mask_;
+    thrust::device_vector<float> velMag_;
+    thrust::device_vector<float2> surfacePoints_;
+};
+
 #endif /* DEVICEARRAY_H_ */

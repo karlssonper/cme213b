@@ -15,8 +15,11 @@ public:
 signals:
     
 public slots:
-
+    void toggleRunStatus();
+    void stepForward();
 protected:
+    enum Update{ PAUSE = 0, STEP = 1, ANIMATE = 2};
+    Update solve_;
     void resizeGL(int w, int h);
     void initializeGL();
     void paintGL();

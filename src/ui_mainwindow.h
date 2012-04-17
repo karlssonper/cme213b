@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Thu Apr 12 14:21:51 2012
+** Created: Sat Apr 14 19:26:31 2012
 **      by: Qt User Interface Compiler version 4.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -19,6 +19,7 @@
 #include <QtGui/QLCDNumber>
 #include <QtGui/QMainWindow>
 #include <QtGui/QMenuBar>
+#include <QtGui/QPushButton>
 #include <QtGui/QScrollArea>
 #include <QtGui/QSlider>
 #include <QtGui/QStatusBar>
@@ -41,6 +42,8 @@ public:
     QSlider *cflSlider;
     QSlider *gravitySlider;
     QLCDNumber *gravityNumber;
+    QPushButton *playButton;
+    QPushButton *stepButton;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -101,10 +104,13 @@ public:
 
         gridLayout_2->addWidget(gravityNumber, 0, 1, 1, 1);
 
+        playButton = new QPushButton(centralWidget);
+        playButton->setObjectName(QString::fromUtf8("playButton"));
+        playButton->setGeometry(QRect(480, 120, 114, 32));
+        stepButton = new QPushButton(centralWidget);
+        stepButton->setObjectName(QString::fromUtf8("stepButton"));
+        stepButton->setGeometry(QRect(610, 120, 114, 32));
         MainWindow->setCentralWidget(centralWidget);
-        gridLayoutWidget->raise();
-        scrollArea->raise();
-        gridLayoutWidget_2->raise();
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
         menuBar->setGeometry(QRect(0, 0, 788, 22));
@@ -124,6 +130,8 @@ public:
     void retranslateUi(QMainWindow *MainWindow)
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0, QApplication::UnicodeUTF8));
+        playButton->setText(QApplication::translate("MainWindow", "Play", 0, QApplication::UnicodeUTF8));
+        stepButton->setText(QApplication::translate("MainWindow", "Step", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

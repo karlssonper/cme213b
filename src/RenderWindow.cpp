@@ -22,13 +22,16 @@
     } } while (0)
 
 RenderWindow::RenderWindow(QWidget *parent) :
-    QGLWidget(parent), pbo_(0), tex_(0)
+    QGLWidget(parent), pbo_(0), tex_(0), solve_(PAUSE)
 {
     cuda_pbo_resource_ = 0;
     //TODO, make user define this
     width_ = 256;
     height_ = 256;
 
+
+    // Resize Widnow
+    resize(256,256);
     // Set up Timer to paint scene
     timer = new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(updateGL()));
@@ -73,7 +76,7 @@ void RenderWindow::initializeGL()
     fluidSolver_->init();
 
     // Start Timer to paint scene
-    timer->start(50);
+    //timer->start(50);
 
 }
 
@@ -81,10 +84,12 @@ void RenderWindow::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //TODO calculate dt
-    float dt = 1.0f/25.0f;
-
-    //fluidSolver_->solve(dt);
+    if (solve_) {
+        if (solve_ == STEP) solve_ = PAUSE;
+        //TODO calculate dt
+        float dt = 1.0f/25.0f;
+        fluidSolver_->solve(dt);
+    }
 
     // map PBO to get CUDA device pointer
     CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &cuda_pbo_resource_, 0));
@@ -93,7 +98,6 @@ void RenderWindow::paintGL()
     CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer((void **)&d_output,
                                                         &num_bytes,
                                                         cuda_pbo_resource_));
-    std::cout << " can map " << int(num_bytes) << std::endl;
     //printf("CUDA mapped PBO: May access %ld bytes\n", num_bytes);
 
     // clear image
@@ -172,4 +176,26 @@ void RenderWindow::initPBO()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void RenderWindow::toggleRunStatus()
+{
+    // If timer is running, we stop it
+    if (this->timer->isActive()) {
+        solve_ = PAUSE;
+        timer->stop();
+    } else {
+        solve_ = ANIMATE;
+        // If timer is stopped, we restart it
+        timer->setSingleShot(false);
+        timer->start(50);
+    }
+}
+void RenderWindow::stepForward()
+{
+    // Stop the timer and step forward one step
+    solve_ = STEP;
+    timer->stop();
+    timer->setSingleShot(true);
+    timer->start(50);
 }

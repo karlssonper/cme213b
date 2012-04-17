@@ -15,6 +15,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+protected slots:
+    void togglePlayButtonStatus();
 protected:
     RenderWindow *renderWindow_;
 private:
